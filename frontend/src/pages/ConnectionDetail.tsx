@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   getConnection,
   testConnection,
   updateChecklist,
   switchToProduction,
   updateConnection,
+  deleteConnection,
 } from "../api/lasoo";
 import { apiErrorMessage } from "../api/client";
 import type { Connection } from "../types";
@@ -14,11 +15,14 @@ import StagingChecklist from "../components/StagingChecklist";
 
 export default function ConnectionDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const connId = Number(id);
   const [conn, setConn] = useState<Connection | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [showDelete, setShowDelete] = useState(false);
 
   // production key form
   const [prodUrl, setProdUrl] = useState("");
@@ -187,6 +191,64 @@ export default function ConnectionDetail() {
         <Link to={`/orders?connection=${conn.id}`} className="btn-secondary">
           View Orders
         </Link>
+      </div>
+
+      <div className="card border border-red-200">
+        <h2 className="mb-1 font-semibold text-red-700">Danger zone</h2>
+        <p className="mb-4 text-sm text-gray-500">
+          Deleting this store permanently removes it along with all of its
+          products, orders, and shipping records stored here. This cannot be
+          undone.
+        </p>
+
+        {!showDelete ? (
+          <button
+            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            disabled={busy}
+            onClick={() => {
+              setShowDelete(true);
+              setConfirmText("");
+            }}
+          >
+            Delete Store
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-700">
+              Type the store name <strong>{conn.store_name}</strong> to confirm.
+            </p>
+            <input
+              className="input"
+              placeholder={conn.store_name}
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+            />
+            <div className="flex gap-3">
+              <button
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                disabled={busy || confirmText.trim() !== conn.store_name}
+                onClick={() =>
+                  wrap(async () => {
+                    await deleteConnection(connId);
+                    navigate("/");
+                  })
+                }
+              >
+                {busy ? "Deleting…" : "Permanently delete"}
+              </button>
+              <button
+                className="btn-secondary"
+                disabled={busy}
+                onClick={() => {
+                  setShowDelete(false);
+                  setConfirmText("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

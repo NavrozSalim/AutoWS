@@ -125,6 +125,27 @@ def test_connection(user, connection_id: int) -> dict:
     }
 
 
+def delete_connection(user, connection_id: int) -> dict:
+    """Delete a store and all of its related local data (listings, orders,
+    shipments cascade via the DB foreign keys)."""
+    conn = _get_owned(user, connection_id)
+    store_name = conn.store_name
+    listings_count = conn.listings.count()
+    conn.delete()
+    logger.info(
+        "Deleted Lasoo connection store=%s user=%s listings=%s",
+        store_name,
+        user.pk,
+        listings_count,
+    )
+    return {
+        "ok": True,
+        "message": (
+            f'Store "{store_name}" and its {listings_count} product(s) were deleted.'
+        ),
+    }
+
+
 def switch_to_production(user, connection_id: int) -> MarketplaceConnection:
     conn = _get_owned(user, connection_id)
 

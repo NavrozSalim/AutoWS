@@ -87,6 +87,10 @@ export async function testConnection(id: number): Promise<MessageResponse> {
   return (await api.post(`/lasoo/connections/${id}/test-connection`)).data;
 }
 
+export async function deleteConnection(id: number): Promise<MessageResponse> {
+  return (await api.delete(`/lasoo/connections/${id}`)).data;
+}
+
 export async function updateChecklist(
   id: number,
   key: string,

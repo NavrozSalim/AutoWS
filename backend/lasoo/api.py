@@ -57,6 +57,11 @@ def update_connection(request, connection_id: int, payload: ConnectionUpdateIn):
     return serialize_connection(conn)
 
 
+@router.delete("/connections/{connection_id}", response=MessageOut)
+def delete_connection(request, connection_id: int):
+    return connection_service.delete_connection(request.auth, connection_id)
+
+
 @router.post("/connections/{connection_id}/test-connection", response=MessageOut)
 def test_connection(request, connection_id: int):
     return connection_service.test_connection(request.auth, connection_id)
