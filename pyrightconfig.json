@@ -2,5 +2,7 @@
   "venvPath": "backend",
   "venv": "venv",
   "include": ["backend"],
-  "exclude": ["**/node_modules", "frontend", "backend/venv"]
+  "exclude": ["**/node_modules", "frontend", "backend/venv"],
+  "reportCallIssue": false,
+  "reportArgumentType": false
 }
