@@ -1,5 +1,6 @@
 """Unit tests for the riskiest logic: mapper escaping/cents and validation."""
 import json
+from types import SimpleNamespace
 
 from django.test import SimpleTestCase
 
@@ -115,6 +116,56 @@ class LasooQueriesTests(SimpleTestCase):
             {"message": "Fail.. Query does not exist. Check the name and version"}
         )
         self.assertIn("Query does not exist", msg or "")
+
+
+class VariantDeleteTests(SimpleTestCase):
+    def test_environments_for_staging_upload(self):
+        from lasoo.models import ListingStatus
+        from lasoo.services import variant_delete_service
+
+        listing = SimpleNamespace(
+            status=ListingStatus.UPLOADED_STAGING,
+        )
+        self.assertEqual(
+            variant_delete_service.environments_for_listing(listing),
+            ["staging"],
+        )
+
+    def test_environments_for_production_upload(self):
+        from lasoo.models import ListingStatus
+        from lasoo.services import variant_delete_service
+
+        listing = SimpleNamespace(
+            status=ListingStatus.UPLOADED_PRODUCTION,
+        )
+        self.assertEqual(
+            variant_delete_service.environments_for_listing(listing),
+            ["production"],
+        )
+
+    def test_environments_for_draft_skips_lasoo(self):
+        from lasoo.models import ListingStatus
+        from lasoo.services import variant_delete_service
+
+        listing = SimpleNamespace(status=ListingStatus.READY)
+        self.assertEqual(variant_delete_service.environments_for_listing(listing), [])
+
+    def test_bulk_delete_payload_shape(self):
+        payload = build_payload(
+            "bulk_delete",
+            data={
+                "keys": [
+                    {
+                        "externalProductKey": "P1",
+                        "externalVariantKey": "V1",
+                    }
+                ]
+            },
+            auth="KEY",
+        )
+        self.assertEqual(payload["query"], "Variants_BulkDelete")
+        self.assertEqual(payload["auth"], "KEY")
+        self.assertEqual(len(payload["data"]["keys"]), 1)
 
 
 class ValidatorTests(SimpleTestCase):

@@ -196,9 +196,9 @@ export default function ConnectionDetail() {
       <div className="card border border-red-200">
         <h2 className="mb-1 font-semibold text-red-700">Danger zone</h2>
         <p className="mb-4 text-sm text-gray-500">
-          Deleting this store permanently removes it along with all of its
-          products, orders, and shipping records stored here. This cannot be
-          undone.
+          Deleting this store permanently removes it from AutoWS and Lasoo
+          (uploaded products), along with all local orders and shipping records.
+          This cannot be undone.
         </p>
 
         {!showDelete ? (

@@ -18,6 +18,7 @@ from ..models import (
 from ..utils import csv_import
 from . import connection_service, crypto, mapper, validator
 from .client import LasooClient
+from . import variant_delete_service
 
 logger = logging.getLogger("lasoo")
 
@@ -95,9 +96,16 @@ def update(user, listing_id: int, payload) -> LasooListing:
     return listing
 
 
-def delete(user, listing_id: int):
+def delete(user, listing_id: int) -> dict:
     listing = _get_listing(user, listing_id)
+    variant_key = listing.external_variant_key
+    removed_from_lasoo = variant_delete_service.delete_listing_from_lasoo(listing)
     listing.delete()
+    if removed_from_lasoo:
+        message = f'Product "{variant_key}" deleted from AutoWS and Lasoo.'
+    else:
+        message = f'Product "{variant_key}" deleted from AutoWS.'
+    return {"ok": True, "message": message}
 
 
 def get(user, listing_id: int) -> LasooListing:

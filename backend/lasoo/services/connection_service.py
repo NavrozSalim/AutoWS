@@ -16,6 +16,7 @@ from ..models import (
 from ..lasoo_queries import build_payload
 from . import crypto
 from .client import LasooClient
+from . import variant_delete_service
 
 logger = logging.getLogger("lasoo")
 
@@ -126,24 +127,31 @@ def test_connection(user, connection_id: int) -> dict:
 
 
 def delete_connection(user, connection_id: int) -> dict:
-    """Delete a store and all of its related local data (listings, orders,
-    shipments cascade via the DB foreign keys)."""
+    """Delete a store, its Lasoo variants, and all related local data."""
     conn = _get_owned(user, connection_id)
     store_name = conn.store_name
-    listings_count = conn.listings.count()
+    listings = list(conn.listings.all())
+    listings_count = len(listings)
+    lasoo_count = variant_delete_service.delete_listings_from_lasoo(conn, listings)
     conn.delete()
     logger.info(
-        "Deleted Lasoo connection store=%s user=%s listings=%s",
+        "Deleted Lasoo connection store=%s user=%s listings=%s lasoo=%s",
         store_name,
         user.pk,
         listings_count,
+        lasoo_count,
     )
-    return {
-        "ok": True,
-        "message": (
-            f'Store "{store_name}" and its {listings_count} product(s) were deleted.'
-        ),
-    }
+    if lasoo_count:
+        message = (
+            f'Store "{store_name}" deleted from AutoWS and Lasoo '
+            f"({lasoo_count} product(s) removed from marketplace)."
+        )
+    else:
+        message = (
+            f'Store "{store_name}" and its {listings_count} product(s) '
+            f"were deleted from AutoWS."
+        )
+    return {"ok": True, "message": message}
 
 
 def switch_to_production(user, connection_id: int) -> MarketplaceConnection:

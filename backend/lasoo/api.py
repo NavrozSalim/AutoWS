@@ -109,8 +109,7 @@ def update_listing(request, listing_id: int, payload: ListingIn):
 
 @router.delete("/listings/{listing_id}", response=MessageOut)
 def delete_listing(request, listing_id: int):
-    listing_service.delete(request.auth, listing_id)
-    return {"ok": True, "message": "Listing deleted."}
+    return listing_service.delete(request.auth, listing_id)
 
 
 @router.post("/connections/{connection_id}/listings/validate", response=MessageOut)
